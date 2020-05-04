@@ -15,7 +15,7 @@ total_steps = 1000;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% [1] Initialize Parameters and Spaces
 % (a) Define # of Model Evaluation (# of MC sampling of Parameter Sets)
-n_sim = 55000;
+n_sim = 100000;
 export = 1;
 if n_sim > 50000
     simwarn = questdlg('WARNING: For n_sim >50,000 there could be issues with exporting results via xlswrite. Disable xlswrite?',...
