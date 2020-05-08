@@ -15,7 +15,7 @@ total_steps = 1000;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% [1] Initialize Parameters and Spaces
 % (a) Define # of Model Evaluation (# of MC sampling of Parameter Sets)
-n_sim = 100000;
+n_sim = 5000;
 export = 1;
 if n_sim > 50000
     simwarn = questdlg('WARNING: For n_sim >50,000 there could be issues with exporting results via xlswrite. Disable xlswrite?',...
@@ -278,23 +278,23 @@ end
 for i = 1:n_out
     % 1st Order Sobol Indices
     [score, rank] = sort(Sobol_1st(:,i), 'descend');
-    fprintf('1st Order Sobol Ranks for CCU Eval Output %.4f \n', i)
+    fprintf('1st Order Sobol Ranks for CCU Eval Output %.0f \n', i)
     rank
     sprintf('The Partial Variance Indices (1st Order Sobol) for the Above Order are: ')
     Sobol_1st(:,i)
-    fprintf('Sum of Partial Variance Indices for Output %.4f \n', i)
+    fprintf('Sum of Partial Variance Indices for Output %.0f \n', i)
     sum(Sobol_1st(:,i))
-    fprintf('Relative 1st Order Sobol Indices for Output %.4f \n', i)
+    fprintf('Relative 1st Order Sobol Indices for Output %.0f \n', i)
     Sobol_1st(:,i)*D(i)/Sum_Partial(i)
     % Total Sobol Indices
     [score2, rank2] = sort(Sobol_Total(:,i), 'descend');
-    fprintf('Total Sobol Ranks for CCU Eval Output %.4f \n', i)
+    fprintf('Total Sobol Ranks for CCU Eval Output %.0f \n', i)
     rank2
     sprintf('The Total Variance Indices (Total Sobol) for the Above Order are: ')
     Sobol_Total(:,i)
-    fprintf('Sum of Total Sobol Indices for CCU Eval Output %.4f \n', i)
+    fprintf('Sum of Total Sobol Indices for CCU Eval Output %.0f \n', i)
     sum(Sobol_Total(:,i))
-    fprintf('Relative Total Sobol Indices for Output %.4f \n', i)
+    fprintf('Relative Total Sobol Indices for Output %.0f \n', i)
     Sobol_Total(:,i)*D(i)/Sum_Total(i)
 end
 
@@ -323,6 +323,11 @@ nbins = 30;             % Define resolution of output metric's historgram
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % (c) Export Results
+%%Progress Bar%%
+waitbar(1000/total_steps, progress, 'Complete');
+delete(progress)
+toc
+
 if export == 1
     xlswrite('MC-Sobol_EvaluatedOutputs.xls', fx)
     xlswrite('MC-Sobol_TotVar+F0.xls', [D, f0])
@@ -331,7 +336,3 @@ if export == 1
     xlswrite('MC-Sobol_1stOrderSobol.xls', [score, rank])
     xlswrite('MC-Sobol_TotalSobol.xls', [score2, rank2])
 end
-%%Progress Bar%%
-waitbar(1000/total_steps, progress, 'Complete');
-delete(progress)
-toc
