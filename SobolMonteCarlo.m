@@ -9,13 +9,11 @@ clc;
 tic;
 format longG;
 progress = waitbar(0, 'Running...', 'Name', 'Running PR-MC-Sobol...');
-set(findall(progress), 'Units', 'Normalized')
-set(progress, 'Position', [0.25, 0.4, 0.18, 0.12])
 total_steps = 1000;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% [1] Initialize Parameters and Spaces
 % (a) Define # of Model Evaluation (# of MC sampling of Parameter Sets)
-n_sim = 5000;
+n_sim = 2500;
 export = 1;
 if n_sim > 50000
     simwarn = questdlg('WARNING: For n_sim >50,000 there could be issues with exporting results via xlswrite. Disable xlswrite?',...
@@ -141,7 +139,7 @@ fx_P = zeros(n_sim, n_out);% Evaluated outputs with i from ParSpace, ~i from c_P
 fx_C = zeros(n_sim, n_out);% Evaluated outputs with i from c_ParSpacek, ~i from ParSpace
 
 % (c) Evaluate Model from Monte Carlo Sampled Inputs (ParSpace)
-for i = 1:n_sim
+parfor i = 1:n_sim
     % Each Parameter Set is a Row in the ParSpace matrix
     Parameter_Set = ParSpace(i,:); 
     fx(i,:) = CCUS_Biocrude(Parameter_Set);
@@ -190,7 +188,7 @@ f0 = zeros(1, n_out);
 D = zeros(1, n_out);            
 
 % (b) Compute the Average of Model Outputs, f0
-for i = 1:n_out 
+parfor i = 1:n_out 
     for j = 1:n_sim
         % The average of the Model Outputs is defined as the sum of all
         % model outputs for each output in fx, divided by the number of
@@ -201,7 +199,7 @@ for i = 1:n_out
 end
 
 % (c) Estimating Total Output Variance, D, using MC Model Outputs
-for i = 1:n_out
+parfor i = 1:n_out
     for j = 1:n_sim
         % The TOTAL variance of Model Outputs is defined using ANOVA, and
         % is the integral of the square of function outputs minus the
@@ -217,7 +215,7 @@ end
 % total variance D minus (1/2N) times the square of (fx - fx_P)
 D_1st = zeros(n_kp, n_out);
 F_Par = zeros(n_kp, n_out);           % Initialize Partial Variance Factors
-for i = 1:n_kp
+parfor i = 1:n_kp
     for j = 1:n_out
         for k = 1:n_sim
             F_Par(i,j) = F_Par(i,j) + (fx(k,j) - fx_P(k,j,i))^2;
@@ -229,7 +227,7 @@ end
 %(e) Compute Total Variances (Total Sobol)
 D_Tot = zeros(n_kp, n_out);
 F_cPar = zeros(n_kp, n_out);          % Initialize Total Sobol Factors
-for i = 1:n_kp
+parfor i = 1:n_kp
     for j = 1:n_out
         for k = 1:n_sim
             % Unlike 1st order Sobol, the parameter of interest is sampled
@@ -257,7 +255,7 @@ waitbar(950/total_steps, progress, 'Exporting Sobol Indices');
 % partial and total indices can be >1 and <1, respectively.
 Sum_Partial = zeros(n_out);
 Sum_Total = zeros(n_out);
-for i = 1:n_out
+parfor i = 1:n_out
     Sum_Partial(i) = sum(D_1st(:,i));
     Sum_Total(i) = sum(D_Tot(:,i));
 end
@@ -267,7 +265,7 @@ end
 % variances, the more additive the model is. 
 Sobol_1st = zeros(n_kp, n_out);
 Sobol_Total = zeros(n_kp, n_out);
-for i = 1:n_out
+parfor i = 1:n_out
     for j = 1:n_kp
         Sobol_1st(j,i) = D_1st(j,i)/D(i);
         Sobol_Total(j,i) = D_Tot(j,i)/D(i);
@@ -275,7 +273,7 @@ for i = 1:n_out
 end
 
 % (b) Rank the Parameters via Sobol Indices
-for i = 1:n_out
+parfor i = 1:n_out
     % 1st Order Sobol Indices
     [score, rank] = sort(Sobol_1st(:,i), 'descend');
     fprintf('1st Order Sobol Ranks for CCU Eval Output %.0f \n', i)
@@ -302,7 +300,7 @@ end
 
 %% [6] Plot and Export Results
 % (a) Plot Distributions of Model Outputs
-nbins = 30;             % Define resolution of output metric's historgram
+nbins = 42;             % Define resolution of output metric's historgram
 
 % (b) Generate plots (Example for via For loop below)
 %for i = 1:n_out
@@ -311,9 +309,9 @@ nbins = 30;             % Define resolution of output metric's historgram
 %end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % Output #1
-    figure('Name', 'Variance of Unit Prod Cost')
+    figure('Name', 'Variance of Cost of Products Manufactured')
     histogram(fx(:,1), nbins, 'facecolor', [0, 0, 0])
-    xlabel('Biocrude Unit Prod. Cost, $/kg')
+    xlabel('Net Unit Production Cost, $/kg')
     ylabel('Frequency')
     % Output #2
     figure('Name', 'Variance of Specific GWI')
